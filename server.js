@@ -2,6 +2,7 @@
 
 require("dotenv").config();
 
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
@@ -23,7 +24,7 @@ const PI_API_BASE = (
 const ET_MAX_SUPPLY = 40_000_000;
 const ET_MINING_POOL = 20_000_000;
 
-const BASE_MINING_RATE = 0.01; // ET per hour
+const BASE_MINING_RATE = 0.01;
 const MINING_DURATION_HOURS = 24;
 const MINING_DURATION_MS =
   MINING_DURATION_HOURS * 60 * 60 * 1000;
@@ -42,12 +43,18 @@ const pool = new Pool({
   ssl:
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
-      : false
+      : false,
+
+  max: 10,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 10_000
 });
 
 // ==================================================
-// APP CONFIGURATION
+// SECURITY / APP CONFIGURATION
 // ==================================================
+
+app.disable("x-powered-by");
 
 app.use(
   cors({
@@ -57,7 +64,7 @@ app.use(
           .map((v) => v.trim())
       : true,
 
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
 
     allowedHeaders: [
       "Content-Type",
@@ -69,6 +76,33 @@ app.use(
 app.use(
   express.json({
     limit: "100kb"
+  })
+);
+
+// ==================================================
+// FRONTEND
+// ==================================================
+//
+// index.html must be located in the same directory
+// as this server.js file.
+//
+// Example:
+//
+// repository/
+// ├── server.js
+// ├── index.html
+// └── package.json
+//
+
+const FRONTEND_DIR = __dirname;
+
+app.use(
+  express.static(FRONTEND_DIR, {
+    index: false,
+    maxAge:
+      process.env.NODE_ENV === "production"
+        ? "1h"
+        : 0
   })
 );
 
@@ -93,6 +127,19 @@ function getBearerToken(req) {
   return header
     .substring(7)
     .trim();
+}
+
+function getAccessToken(req) {
+  return (
+    req.body?.accessToken ||
+    getBearerToken(req)
+  );
+}
+
+function roundET(value) {
+  return Number(
+    Number(value || 0).toFixed(8)
+  );
 }
 
 // ==================================================
@@ -189,27 +236,22 @@ function getHalvingMultiplier(
   const percentage =
     used / ET_MINING_POOL;
 
-  // First 25% = 100%
   if (percentage < 0.25) {
     return 1.00;
   }
 
-  // 25% - 50% = 50%
   if (percentage < 0.50) {
     return 0.50;
   }
 
-  // 50% - 75% = 25%
   if (percentage < 0.75) {
     return 0.25;
   }
 
-  // 75% - 90% = 12.5%
   if (percentage < 0.90) {
     return 0.125;
   }
 
-  // 90% - 100% = 6.25%
   return 0.0625;
 }
 
@@ -227,13 +269,15 @@ async function getMiningPoolUsed(
           SUM(amount),
           0
         ) AS total
+
       FROM et_ledger
+
       WHERE transaction_type =
         'MINING_REWARD'
     `);
 
   return Number(
-    result.rows[0].total || 0
+    result.rows[0]?.total || 0
   );
 }
 
@@ -242,10 +286,6 @@ async function getMiningPoolUsed(
 // ==================================================
 
 async function initializeDatabase() {
-
-  // ------------------------------------------------
-  // MEMBERS
-  // ------------------------------------------------
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS et_members (
@@ -292,10 +332,6 @@ async function initializeDatabase() {
     ON et_members(pi_uid);
   `);
 
-  // ------------------------------------------------
-  // LEDGER
-  // ------------------------------------------------
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS et_ledger (
 
@@ -331,10 +367,6 @@ async function initializeDatabase() {
 
     ON et_ledger(transaction_type);
   `);
-
-  // ------------------------------------------------
-  // MINING SESSIONS
-  // ------------------------------------------------
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS
@@ -381,17 +413,53 @@ async function initializeDatabase() {
 }
 
 // ==================================================
-// HEALTH CHECK
+// ROOT / FRONTEND
 // ==================================================
 
 app.get("/", (req, res) => {
 
+  res.sendFile(
+    path.join(
+      FRONTEND_DIR,
+      "index.html"
+    ),
+    (error) => {
+
+      if (error) {
+
+        console.error(
+          "Frontend error:",
+          error
+        );
+
+        res.status(500).json({
+
+          success: false,
+
+          error:
+            "ET Token frontend index.html not found"
+
+        });
+      }
+    }
+  );
+});
+
+// ==================================================
+// API HEALTH
+// ==================================================
+
+app.get("/api", (req, res) => {
+
   res.json({
+
     success: true,
 
-    project: "ET Token",
+    project:
+      "ET Token",
 
-    symbol: "ET",
+    symbol:
+      "ET",
 
     maxSupply:
       ET_MAX_SUPPLY,
@@ -414,11 +482,12 @@ app.get("/", (req, res) => {
 
     status:
       "ONLINE"
+
   });
 });
 
 // ==================================================
-// PI LOGIN / ET ACCOUNT CREATION
+// PI LOGIN / ET ACCOUNT
 // ==================================================
 
 app.post(
@@ -428,8 +497,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -453,17 +521,15 @@ app.post(
             reputation_score,
             et_balance,
             mining_active
+
           FROM et_members
+
           WHERE pi_uid = $1
           `,
           [piUser.uid]
         );
 
       let member;
-
-      // --------------------------------------------
-      // NEW USER
-      // --------------------------------------------
 
       if (
         existing.rows.length === 0
@@ -475,12 +541,11 @@ app.post(
             INSERT INTO et_members (
 
               pi_uid,
-
               pi_username,
-
               referral_code
 
             )
+
             VALUES ($1, $2, $3)
 
             RETURNING
@@ -503,13 +568,7 @@ app.post(
         member =
           inserted.rows[0];
 
-      }
-
-      // --------------------------------------------
-      // EXISTING USER
-      // --------------------------------------------
-
-      else {
+      } else {
 
         const updated =
           await pool.query(
@@ -584,8 +643,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -604,7 +662,9 @@ app.post(
             et_balance,
             mining_active,
             created_at
+
           FROM et_members
+
           WHERE pi_uid = $1
           `,
           [piUser.uid]
@@ -669,8 +729,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const referralCode =
         String(
@@ -702,13 +761,15 @@ app.post(
         "BEGIN"
       );
 
-      // Lock current member
       const memberResult =
         await client.query(
           `
           SELECT *
+
           FROM et_members
+
           WHERE pi_uid = $1
+
           FOR UPDATE
           `,
           [piUser.uid]
@@ -743,7 +804,6 @@ app.post(
         );
       }
 
-      // Lock referrer
       const referrerResult =
         await client.query(
           `
@@ -751,8 +811,11 @@ app.post(
             id,
             pi_username,
             referral_code
+
           FROM et_members
+
           WHERE referral_code = $1
+
           FOR UPDATE
           `,
           [referralCode]
@@ -770,13 +833,14 @@ app.post(
       const referrer =
         referrerResult.rows[0];
 
-      // Link referral
       await client.query(
         `
         UPDATE et_members
 
         SET
           referred_by = $2,
+          reputation_score =
+            reputation_score + 1,
           updated_at = NOW()
 
         WHERE id = $1
@@ -785,22 +849,6 @@ app.post(
           member.id,
           referrer.referral_code
         ]
-      );
-
-      // Give reputation point
-      await client.query(
-        `
-        UPDATE et_members
-
-        SET
-          reputation_score =
-            reputation_score + 1,
-
-          updated_at = NOW()
-
-        WHERE id = $1
-        `,
-        [member.id]
       );
 
       await client.query(
@@ -862,8 +910,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -877,7 +924,9 @@ app.post(
             reputation_score,
             referred_by,
             mining_active
+
           FROM et_members
+
           WHERE pi_uid = $1
           `,
           [piUser.uid]
@@ -965,8 +1014,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -977,13 +1025,15 @@ app.post(
         "BEGIN"
       );
 
-      // Lock member
       const memberResult =
         await client.query(
           `
           SELECT *
+
           FROM et_members
+
           WHERE pi_uid = $1
+
           FOR UPDATE
           `,
           [piUser.uid]
@@ -1001,16 +1051,15 @@ app.post(
       const member =
         memberResult.rows[0];
 
-      // Prevent multiple sessions
       const activeResult =
         await client.query(
           `
           SELECT *
+
           FROM et_mining_sessions
 
           WHERE
             member_id = $1
-
             AND status = 'ACTIVE'
 
           ORDER BY id DESC
@@ -1031,7 +1080,6 @@ app.post(
         );
       }
 
-      // Check mining pool
       const poolUsed =
         await getMiningPoolUsed(
           client
@@ -1077,13 +1125,9 @@ app.post(
           et_mining_sessions (
 
             member_id,
-
             started_at,
-
             ends_at,
-
             rate,
-
             status
 
           )
@@ -1143,15 +1187,17 @@ app.post(
             BASE_MINING_RATE,
 
           reputationScore:
-            member.reputation_score,
+            Number(
+              member.reputation_score
+            ),
 
           reputationMultiplier,
 
           halvingMultiplier,
 
           effectiveRatePerHour:
-            Number(
-              effectiveRate.toFixed(8)
+            roundET(
+              effectiveRate
             )
 
         }
@@ -1201,8 +1247,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -1223,7 +1268,6 @@ app.post(
 
           WHERE
             m.pi_uid = $1
-
             AND ms.status = 'ACTIVE'
 
           ORDER BY ms.id DESC
@@ -1316,9 +1360,7 @@ app.post(
             ),
 
           earned:
-            Number(
-              earned.toFixed(8)
-            ),
+            roundET(earned),
 
           claimAvailable
 
@@ -1361,8 +1403,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -1373,13 +1414,15 @@ app.post(
         "BEGIN"
       );
 
-      // Lock member
       const memberResult =
         await client.query(
           `
           SELECT *
+
           FROM et_members
+
           WHERE pi_uid = $1
+
           FOR UPDATE
           `,
           [piUser.uid]
@@ -1397,16 +1440,15 @@ app.post(
       const member =
         memberResult.rows[0];
 
-      // Lock active session
       const sessionResult =
         await client.query(
           `
           SELECT *
+
           FROM et_mining_sessions
 
           WHERE
             member_id = $1
-
             AND status = 'ACTIVE'
 
           ORDER BY id DESC
@@ -1445,10 +1487,6 @@ app.post(
         );
       }
 
-      // --------------------------------------------
-      // CHECK MINING POOL
-      // --------------------------------------------
-
       const poolUsed =
         await getMiningPoolUsed(
           client
@@ -1486,7 +1524,7 @@ app.post(
         crypto.randomUUID();
 
       // --------------------------------------------
-      // LEDGER ENTRY
+      // LEDGER
       // --------------------------------------------
 
       await client.query(
@@ -1494,11 +1532,8 @@ app.post(
         INSERT INTO et_ledger (
 
           member_id,
-
           transaction_type,
-
           amount,
-
           reference_id
 
         )
@@ -1518,7 +1553,7 @@ app.post(
       );
 
       // --------------------------------------------
-      // UPDATE BALANCE
+      // BALANCE + REPUTATION
       // --------------------------------------------
 
       await client.query(
@@ -1583,9 +1618,7 @@ app.post(
           "ET mining reward claimed",
 
         reward:
-          Number(
-            reward.toFixed(8)
-          ),
+          roundET(reward),
 
         newReputationScore:
           Number(
@@ -1639,8 +1672,7 @@ app.post(
     try {
 
       const accessToken =
-        req.body.accessToken ||
-        getBearerToken(req);
+        getAccessToken(req);
 
       const piUser =
         await verifyPiAccessToken(
@@ -1685,7 +1717,7 @@ app.post(
             .pi_username,
 
         balance:
-          Number(
+          roundET(
             result.rows[0]
               .et_balance
           )
@@ -1714,10 +1746,58 @@ app.post(
 );
 
 // ==================================================
-// ERROR HANDLER
+// DATABASE HEALTH
+// ==================================================
+
+app.get(
+  "/api/health/db",
+  async (req, res) => {
+
+    try {
+
+      await pool.query(
+        "SELECT 1"
+      );
+
+      res.json({
+
+        success: true,
+
+        database:
+          "CONNECTED",
+
+        project:
+          "ET Token"
+
+      });
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "Database health error:",
+        error
+      );
+
+      res.status(503).json({
+
+        success: false,
+
+        database:
+          "UNAVAILABLE"
+
+      });
+    }
+  }
+);
+
+// ==================================================
+// API 404
 // ==================================================
 
 app.use(
+  "/api",
   (req, res) => {
 
     res.status(404).json({
@@ -1725,7 +1805,36 @@ app.use(
       success: false,
 
       error:
-        "Endpoint not found"
+        "ET API endpoint not found"
+
+    });
+  }
+);
+
+// ==================================================
+// GLOBAL ERROR HANDLER
+// ==================================================
+
+app.use(
+  (error, req, res, next) => {
+
+    console.error(
+      "Unhandled server error:",
+      error
+    );
+
+    if (
+      res.headersSent
+    ) {
+      return next(error);
+    }
+
+    res.status(500).json({
+
+      success: false,
+
+      error:
+        "Internal server error"
 
     });
   }
@@ -1743,11 +1852,12 @@ async function startServer() {
 
     app.listen(
       PORT,
+      "0.0.0.0",
       () => {
 
         console.log(`
 ========================================
-             ET TOKEN
+              ET TOKEN
 ========================================
 
 Symbol:          ET
@@ -1755,8 +1865,14 @@ Max Supply:      ${ET_MAX_SUPPLY.toLocaleString()} ET
 Mining Pool:     ${ET_MINING_POOL.toLocaleString()} ET
 Base Rate:       ${BASE_MINING_RATE} ET/hour
 Mining Duration: ${MINING_DURATION_HOURS} hours
-Network:         Pi Testnet
 
+Network:         Pi Testnet
+Environment:     ${
+  process.env.NODE_ENV ||
+  "development"
+}
+
+Frontend:        index.html
 Status:          ONLINE
 Port:            ${PORT}
 
@@ -1778,5 +1894,50 @@ Port:            ${PORT}
     process.exit(1);
   }
 }
+
+// ==================================================
+// GRACEFUL SHUTDOWN
+// ==================================================
+
+async function shutdown(
+  signal
+) {
+
+  console.log(
+    `${signal} received. Closing database...`
+  );
+
+  try {
+
+    await pool.end();
+
+    console.log(
+      "ET database connection closed."
+    );
+
+    process.exit(0);
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Shutdown error:",
+      error
+    );
+
+    process.exit(1);
+  }
+}
+
+process.on(
+  "SIGTERM",
+  () => shutdown("SIGTERM")
+);
+
+process.on(
+  "SIGINT",
+  () => shutdown("SIGINT")
+);
 
 startServer();
