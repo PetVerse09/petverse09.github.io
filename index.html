@@ -3,1524 +3,618 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#12001f">
-<meta name="description" content="ET Token - Pi Testnet mining ecosystem">
 
-<title>ET Token</title>
-
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<title>TT Core Machine V4 | Pioneer Mining</title>
 
 <style>
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,Helvetica,sans-serif;
-}
-
-:root{
-    --bg:#09000f;
-    --panel:#160522;
-    --panel2:#210832;
-    --gold:#f6d365;
-    --gold2:#d6a82f;
-    --purple:#8c38c7;
-    --text:#fff;
-    --muted:#a99bb0;
-    --green:#4ade80;
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
 body{
-    min-height:100vh;
-    color:var(--text);
-    background:
-        radial-gradient(circle at 50% -10%,#7024a5 0%,transparent 38%),
-        linear-gradient(180deg,#13001f,#08000d);
-    overflow-x:hidden;
+  min-height:100vh;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 25%,#173b58 0%,#07131f 38%,#02060b 75%);
+  overflow-x:hidden;
 }
 
-button{
-    font:inherit;
-}
-
-.app{
-    width:100%;
-    max-width:620px;
-    margin:auto;
-    min-height:100vh;
-    padding-bottom:40px;
+/* BACKGROUND */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(0,220,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,220,255,.035) 1px,transparent 1px);
+  background-size:45px 45px;
+  mask-image:linear-gradient(to bottom,black,transparent);
 }
 
 /* HEADER */
-
 .header{
-    padding:22px 18px 18px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+  position:relative;
+  z-index:5;
+  width:100%;
+  padding:15px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(0,220,255,.25);
+  background:rgba(2,8,15,.82);
+  backdrop-filter:blur(12px);
 }
 
-.brand{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.logo{
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:#7deaff;
+  text-shadow:0 0 15px #00cfff;
 }
 
-.brand-logo{
-    width:52px;
-    height:52px;
-    border-radius:16px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
-    font-weight:900;
-    color:#32143c;
-    background:linear-gradient(145deg,#fff5a8,#d4a32e,#fff0a0);
-    box-shadow:
-        0 0 25px rgba(246,211,101,.25),
-        inset 0 1px 3px #fff;
+.pioneer{
+  font-size:13px;
+  color:#b8d8e5;
 }
 
-.brand-name{
-    font-size:20px;
-    font-weight:800;
+.pioneer span{
+  color:#6dffbb;
+  font-weight:bold;
 }
 
-.brand-sub{
-    font-size:11px;
-    color:var(--muted);
-    margin-top:3px;
+/* MAIN */
+.main{
+  position:relative;
+  z-index:2;
+  max-width:900px;
+  margin:auto;
+  padding:20px 15px 110px;
 }
 
-.network{
-    font-size:10px;
-    padding:7px 10px;
-    border-radius:20px;
-    color:#d9baff;
-    background:rgba(140,56,199,.14);
-    border:1px solid rgba(140,56,199,.35);
+/* STATUS */
+.status{
+  display:flex;
+  justify-content:center;
+  margin-bottom:15px;
 }
 
-/* HERO */
-
-.hero{
-    margin:5px 16px 18px;
-    padding:28px 20px;
-    border-radius:26px;
-    position:relative;
-    overflow:hidden;
-    background:
-        radial-gradient(circle at 80% 20%,rgba(246,211,101,.15),transparent 25%),
-        linear-gradient(145deg,#2b0b40,#13001f);
-    border:1px solid rgba(246,211,101,.15);
-    box-shadow:0 20px 50px rgba(0,0,0,.35);
+.status-box{
+  padding:9px 18px;
+  border:1px solid rgba(73,255,190,.45);
+  border-radius:30px;
+  background:rgba(0,40,30,.35);
+  color:#72ffbd;
+  font-size:12px;
+  letter-spacing:1px;
+  box-shadow:0 0 20px rgba(0,255,170,.1);
 }
 
-.hero:after{
-    content:"";
-    position:absolute;
-    width:180px;
-    height:180px;
-    right:-80px;
-    bottom:-80px;
-    border-radius:50%;
-    background:rgba(140,56,199,.18);
-    filter:blur(10px);
+.dot{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#50ffad;
+  box-shadow:0 0 12px #50ffad;
+  margin-right:7px;
 }
 
-.hero-label{
-    color:var(--gold);
-    font-size:12px;
-    font-weight:bold;
-    letter-spacing:1.5px;
-    text-transform:uppercase;
+/* CORE AREA */
+.core-section{
+  position:relative;
+  min-height:470px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-.hero h1{
-    font-size:34px;
-    line-height:1.1;
-    margin:9px 0;
+.core-glow{
+  position:absolute;
+  width:330px;
+  height:330px;
+  border-radius:50%;
+  background:rgba(0,210,255,.13);
+  filter:blur(45px);
+  animation:pulse 3s infinite ease-in-out;
 }
 
-.hero p{
-    color:var(--muted);
-    font-size:14px;
-    line-height:1.5;
+@keyframes pulse{
+  0%,100%{transform:scale(.9);opacity:.55}
+  50%{transform:scale(1.12);opacity:1}
 }
 
-/* LOGIN */
-
-.login-card{
-    margin:16px;
-    padding:28px 20px;
-    text-align:center;
-    border-radius:24px;
-    background:linear-gradient(145deg,#21102d,#120019);
-    border:1px solid rgba(255,255,255,.08);
+/* CORE MACHINE */
+.core-machine{
+  position:relative;
+  width:300px;
+  height:300px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 50% 50%,
+      #d9fbff 0%,
+      #65eaff 8%,
+      #087da7 22%,
+      #092d46 43%,
+      #06101a 64%,
+      #02070c 75%);
+  border:7px solid #12394f;
+  box-shadow:
+    0 0 20px #00d9ff,
+    0 0 60px rgba(0,214,255,.7),
+    inset 0 0 45px rgba(0,213,255,.8);
+  animation:coreFloat 4s infinite ease-in-out;
 }
 
-.login-card h2{
-    margin-bottom:9px;
+@keyframes coreFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-9px)}
 }
 
-.login-card p{
-    color:var(--muted);
-    font-size:13px;
-    line-height:1.5;
-    margin-bottom:20px;
+/* OUTER RINGS */
+.core-machine::before,
+.core-machine::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:2px solid rgba(0,222,255,.7);
 }
 
-.pi-login{
-    width:100%;
-    border:0;
-    border-radius:15px;
-    padding:16px;
-    font-weight:800;
-    color:#2a1233;
-    background:linear-gradient(135deg,#fff1a0,#d7a832);
-    box-shadow:0 8px 25px rgba(214,168,47,.2);
-    cursor:pointer;
+.core-machine::before{
+  inset:-24px;
+  border-top-color:#65ffdc;
+  border-bottom-color:#1479a5;
+  animation:spin 8s linear infinite;
 }
 
-.pi-login:disabled{
-    opacity:.55;
+.core-machine::after{
+  inset:-43px;
+  border-left-color:#00d9ff;
+  border-right-color:#00d9ff;
+  opacity:.45;
+  animation:spinReverse 14s linear infinite;
 }
 
-/* DASHBOARD */
-
-.dashboard{
-    display:none;
+@keyframes spin{
+  to{transform:rotate(360deg)}
 }
 
-/* PROFILE */
-
-.profile{
-    margin:16px;
-    padding:17px;
-    border-radius:20px;
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.08);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+@keyframes spinReverse{
+  to{transform:rotate(-360deg)}
 }
 
-.user{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.core-center{
+  text-align:center;
+  z-index:2;
 }
 
-.avatar{
-    width:44px;
-    height:44px;
-    border-radius:14px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:900;
-    color:#351642;
-    background:linear-gradient(145deg,#ffe98a,#c99827);
+.core-title{
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:3px;
+  color:#fff;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 25px #00d9ff;
 }
 
-.username{
-    font-weight:800;
+.core-v4{
+  margin-top:5px;
+  font-size:13px;
+  color:#6df4ff;
+  letter-spacing:5px;
 }
 
-.uid-label{
-    color:var(--muted);
-    font-size:11px;
-    margin-top:4px;
-}
-
-.live{
-    font-size:10px;
-    color:var(--green);
-    padding:6px 9px;
-    border-radius:15px;
-    background:rgba(74,222,128,.08);
-}
-
-/* BALANCE */
-
-.balance-card{
-    margin:16px;
-    padding:25px 20px;
-    text-align:center;
-    border-radius:25px;
-    background:
-        radial-gradient(circle at 50% 0%,rgba(246,211,101,.13),transparent 40%),
-        linear-gradient(145deg,#281039,#120019);
-    border:1px solid rgba(246,211,101,.18);
-}
-
-.balance-label{
-    color:var(--muted);
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-}
-
-.balance{
-    font-size:43px;
-    font-weight:900;
-    color:var(--gold);
-    margin:8px 0;
-    letter-spacing:-1px;
-}
-
-.balance-symbol{
-    font-weight:bold;
-    color:#e7d8eb;
-}
-
-/* STATS */
-
-.grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    margin:16px;
-}
-
-.stat{
-    padding:18px;
-    border-radius:19px;
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.07);
-}
-
-.stat-title{
-    font-size:11px;
-    color:var(--muted);
-}
-
-.stat-value{
-    color:var(--gold);
-    font-size:25px;
-    font-weight:900;
-    margin-top:8px;
-}
-
-/* MINING */
-
-.section{
-    margin:16px;
-}
-
-.section-title{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:12px;
-}
-
-.section-title h2{
-    font-size:18px;
-}
-
-.section-title span{
-    font-size:10px;
-    color:var(--muted);
-}
-
-.mining-card{
-    padding:20px;
-    border-radius:22px;
-    background:linear-gradient(145deg,#21102f,#100016);
-    border:1px solid rgba(140,56,199,.22);
-}
-
-.mining-status{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.status-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.status-dot{
-    width:10px;
-    height:10px;
-    border-radius:50%;
-    background:#777;
-}
-
-.status-dot.active{
-    background:var(--green);
-    box-shadow:0 0 12px rgba(74,222,128,.7);
-}
-
-.status-text{
-    font-weight:bold;
-    font-size:14px;
-}
-
-.rate-box{
-    margin:18px 0;
-    padding:15px;
-    border-radius:15px;
-    background:rgba(0,0,0,.2);
-    text-align:center;
-}
-
-.rate-label{
-    color:var(--muted);
-    font-size:11px;
+.mining-rate{
+  margin-top:18px;
+  font-size:14px;
+  color:#9eeeff;
 }
 
 .rate{
-    color:var(--gold);
-    font-size:22px;
-    font-weight:900;
-    margin-top:5px;
+  font-size:29px;
+  font-weight:900;
+  color:#fff;
+  text-shadow:0 0 15px #00eaff;
 }
 
-.progress{
-    height:8px;
-    border-radius:10px;
-    overflow:hidden;
-    background:rgba(255,255,255,.08);
-    margin:15px 0;
+/* INFO CARDS */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:15px;
 }
 
-.progress-bar{
-    height:100%;
-    width:0%;
-    border-radius:10px;
-    background:linear-gradient(90deg,#8c38c7,#f6d365);
-    transition:.4s;
+.stat{
+  padding:16px 10px;
+  text-align:center;
+  border:1px solid rgba(0,210,255,.22);
+  border-radius:15px;
+  background:rgba(5,22,34,.75);
+  box-shadow:inset 0 0 25px rgba(0,170,255,.04);
 }
 
-.mining-info{
-    display:flex;
-    justify-content:space-between;
-    color:var(--muted);
-    font-size:11px;
-    margin-bottom:15px;
+.stat-label{
+  color:#7898a8;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
 }
 
-.primary{
-    width:100%;
-    padding:15px;
-    border:0;
-    border-radius:14px;
-    font-weight:900;
-    color:#291331;
-    background:linear-gradient(135deg,#ffe98b,#d4a32e);
-    cursor:pointer;
+.stat-value{
+  margin-top:7px;
+  font-size:18px;
+  font-weight:bold;
+  color:#eaffff;
 }
 
-.primary:disabled{
-    opacity:.5;
+.green{
+  color:#6dffbb;
 }
 
-.claim{
-    display:none;
-    margin-top:10px;
+/* ACTION */
+.mine-area{
+  margin-top:18px;
+  text-align:center;
 }
 
-/* REFERRAL */
-
-.referral{
-    padding:20px;
-    border-radius:22px;
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.08);
+.mine-button{
+  border:1px solid #57edff;
+  border-radius:15px;
+  padding:14px 40px;
+  background:linear-gradient(135deg,#063c58,#087b9b);
+  color:#fff;
+  font-weight:900;
+  letter-spacing:2px;
+  box-shadow:0 0 25px rgba(0,215,255,.3);
+  cursor:pointer;
 }
 
-.referral p{
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.5;
-    margin-bottom:14px;
+.mine-button:active{
+  transform:scale(.96);
 }
-
-.ref-code{
-    padding:15px;
-    border-radius:13px;
-    text-align:center;
-    color:var(--gold);
-    font-weight:900;
-    background:rgba(0,0,0,.25);
-    border:1px dashed rgba(246,211,101,.3);
-    word-break:break-all;
-}
-
-.secondary{
-    width:100%;
-    margin-top:10px;
-    padding:12px;
-    border:1px solid rgba(246,211,101,.25);
-    border-radius:12px;
-    background:transparent;
-    color:var(--gold);
-    font-weight:bold;
-}
-
-/* MESSAGE */
 
 .message{
-    margin:16px;
-    min-height:20px;
-    text-align:center;
-    color:var(--gold);
-    font-size:12px;
+  min-height:18px;
+  margin-top:9px;
+  color:#79b9c9;
+  font-size:11px;
 }
 
-/* FOOTER */
+/* BOTTOM NAV */
+.bottom-nav{
+  position:fixed;
+  z-index:20;
+  left:0;
+  right:0;
+  bottom:0;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:2px;
+  padding:8px 5px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(1,7,13,.94);
+  border-top:1px solid rgba(0,210,255,.3);
+  backdrop-filter:blur(15px);
+}
 
-.footer{
-    text-align:center;
-    color:#75687b;
+.nav-btn{
+  border:0;
+  background:transparent;
+  color:#72909c;
+  min-height:55px;
+  cursor:pointer;
+  font-size:10px;
+}
+
+.nav-icon{
+  display:block;
+  font-size:21px;
+  margin-bottom:4px;
+  filter:drop-shadow(0 0 5px rgba(0,210,255,.35));
+}
+
+.nav-btn.active{
+  color:#6feaff;
+}
+
+.nav-btn.active .nav-icon{
+  filter:drop-shadow(0 0 9px #00d9ff);
+}
+
+/* MOBILE */
+@media(max-width:600px){
+
+  .header{
+    padding:13px 12px;
+  }
+
+  .logo{
+    font-size:15px;
+  }
+
+  .pioneer{
+    font-size:11px;
+  }
+
+  .main{
+    padding-top:15px;
+  }
+
+  .core-section{
+    min-height:390px;
+  }
+
+  .core-machine{
+    width:220px;
+    height:220px;
+  }
+
+  .core-machine::before{
+    inset:-17px;
+  }
+
+  .core-machine::after{
+    inset:-31px;
+  }
+
+  .core-title{
+    font-size:25px;
+  }
+
+  .core-v4{
     font-size:10px;
-    padding:15px;
-}
+    letter-spacing:3px;
+  }
 
-.hidden{
-    display:none!important;
-}
+  .rate{
+    font-size:23px;
+  }
 
-@media(max-width:380px){
+  .stats{
+    gap:7px;
+  }
 
-    .hero h1{
-        font-size:29px;
-    }
+  .stat{
+    padding:12px 5px;
+  }
 
-    .balance{
-        font-size:36px;
-    }
+  .stat-value{
+    font-size:14px;
+  }
+
+  .bottom-nav{
+    padding-left:2px;
+    padding-right:2px;
+  }
+
+  .nav-btn{
+    font-size:8px;
+  }
+
+  .nav-icon{
+    font-size:18px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
-
 <header class="header">
+  <div class="logo">⚡ TT CORE</div>
 
-    <div class="brand">
-
-        <div class="brand-logo">ET</div>
-
-        <div>
-            <div class="brand-name">ET Token</div>
-            <div class="brand-sub">Digital Mining Ecosystem</div>
-        </div>
-
-    </div>
-
-    <div class="network">
-        PI TESTNET
-    </div>
-
+  <div class="pioneer">
+    Pioneer: <span id="username">Guest</span>
+  </div>
 </header>
 
+<main class="main">
 
-<section class="hero">
+  <div class="status">
+    <div class="status-box">
+      <span class="dot"></span>
+      CORE ONLINE • MINING ACTIVE
+    </div>
+  </div>
 
-    <div class="hero-label">
-        ET TOKEN
+  <section class="core-section">
+
+    <div class="core-glow"></div>
+
+    <div class="core-machine">
+
+      <div class="core-center">
+
+        <div class="core-title">TT CORE</div>
+
+        <div class="core-v4">
+          MACHINE V4
+        </div>
+
+        <div class="mining-rate">
+          Mining Rate
+        </div>
+
+        <div class="rate">
+          <span id="rate">0.25</span> TT/H
+        </div>
+
+      </div>
+
     </div>
 
-    <h1>
-        Mine. Build.<br>
-        Earn ET.
-    </h1>
+  </section>
 
-    <p>
-        A reputation-powered mining ecosystem
-        built for the Pi Testnet environment.
-    </p>
+  <section class="stats">
 
-</section>
+    <div class="stat">
+      <div class="stat-label">Balance</div>
+      <div class="stat-value">
+        <span id="balance">0.0000</span> TT
+      </div>
+    </div>
 
+    <div class="stat">
+      <div class="stat-label">Session</div>
+      <div class="stat-value green" id="session">
+        00:00:00
+      </div>
+    </div>
 
-<!-- LOGIN -->
+    <div class="stat">
+      <div class="stat-label">Status</div>
+      <div class="stat-value green">
+        ACTIVE
+      </div>
+    </div>
 
-<section class="login-card" id="loginCard">
+  </section>
 
-    <h2>Welcome to ET Token</h2>
+  <div class="mine-area">
 
-    <p>
-        Sign in securely with your Pi account
-        to access your ET dashboard.
-    </p>
-
-    <button
-        class="pi-login"
-        id="loginBtn"
-        onclick="loginWithPi()"
-    >
-        Login with Pi
+    <button class="mine-button" onclick="startMining()">
+      ⛏️ START MINING
     </button>
 
-</section>
-
-
-<!-- DASHBOARD -->
-
-<div class="dashboard" id="dashboard">
-
-
-    <!-- PROFILE -->
-
-    <section class="profile">
-
-        <div class="user">
-
-            <div class="avatar" id="avatar">
-                ET
-            </div>
-
-            <div>
-
-                <div
-                    class="username"
-                    id="username"
-                >
-                    @username
-                </div>
-
-                <div class="uid-label">
-                    Pi account connected
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="live">
-            ● CONNECTED
-        </div>
-
-    </section>
-
-
-    <!-- BALANCE -->
-
-    <section class="balance-card">
-
-        <div class="balance-label">
-            Available Balance
-        </div>
-
-        <div
-            class="balance"
-            id="balance"
-        >
-            0.00000000
-        </div>
-
-        <div class="balance-symbol">
-            ET
-        </div>
-
-    </section>
-
-
-    <!-- STATS -->
-
-    <div class="grid">
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Reputation Score
-            </div>
-
-            <div
-                class="stat-value"
-                id="reputation"
-            >
-                0
-            </div>
-
-        </div>
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Mining Multiplier
-            </div>
-
-            <div
-                class="stat-value"
-                id="multiplier"
-            >
-                1.00x
-            </div>
-
-        </div>
-
+    <div class="message" id="message">
+      TT Core Machine V4 ready.
     </div>
 
+  </div>
 
-    <!-- MINING -->
+</main>
 
-    <section class="section">
+<nav class="bottom-nav">
 
-        <div class="section-title">
+  <button class="nav-btn active" onclick="openPage('Mining')">
+    <span class="nav-icon">⛏️</span>
+    Mining
+  </button>
 
-            <h2>ET Mining</h2>
+  <button class="nav-btn" onclick="openPage('Wallet')">
+    <span class="nav-icon">💳</span>
+    Wallet
+  </button>
 
-            <span>
-                24 HOUR SESSION
-            </span>
+  <button class="nav-btn" onclick="openPage('Referral')">
+    <span class="nav-icon">👥</span>
+    Referral
+  </button>
 
-        </div>
+  <button class="nav-btn" onclick="openPage('Chat')">
+    <span class="nav-icon">💬</span>
+    Chat
+  </button>
 
-        <div class="mining-card">
+  <button class="nav-btn" onclick="openPage('Profile')">
+    <span class="nav-icon">👤</span>
+    Profile
+  </button>
 
-            <div class="mining-status">
+  <button class="nav-btn" onclick="openPage('Reward')">
+    <span class="nav-icon">🎁</span>
+    Reward
+  </button>
 
-                <div class="status-left">
+  <button class="nav-btn" onclick="openPage('Marketplace')">
+    <span class="nav-icon">🛒</span>
+    Market
+  </button>
 
-                    <div
-                        class="status-dot"
-                        id="statusDot"
-                    ></div>
-
-                    <div
-                        class="status-text"
-                        id="miningStatus"
-                    >
-                        Mining inactive
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="rate-box">
-
-                <div class="rate-label">
-                    CURRENT MINING RATE
-                </div>
-
-                <div
-                    class="rate"
-                    id="miningRate"
-                >
-                    0.01000000 ET/hour
-                </div>
-
-            </div>
-
-
-            <div class="progress">
-
-                <div
-                    class="progress-bar"
-                    id="progressBar"
-                ></div>
-
-            </div>
-
-
-            <div class="mining-info">
-
-                <span id="miningElapsed">
-                    0%
-                </span>
-
-                <span id="miningEnds">
-                    Not active
-                </span>
-
-            </div>
-
-
-            <button
-                class="primary"
-                id="startMiningBtn"
-                onclick="startMining()"
-            >
-                START 24-HOUR MINING
-            </button>
-
-            <button
-                class="primary claim"
-                id="claimBtn"
-                onclick="claimMining()"
-            >
-                CLAIM ET REWARD
-            </button>
-
-        </div>
-
-    </section>
-
-
-    <!-- REFERRAL -->
-
-    <section class="section">
-
-        <div class="section-title">
-
-            <h2>Referral</h2>
-
-            <span>
-                PI USERNAME
-            </span>
-
-        </div>
-
-        <div class="referral">
-
-            <p>
-                Your ET referral code is based on
-                your Pi username.
-            </p>
-
-            <div
-                class="ref-code"
-                id="referralCode"
-            >
-                —
-            </div>
-
-            <button
-                class="secondary"
-                onclick="copyReferral()"
-            >
-                COPY REFERRAL CODE
-            </button>
-
-        </div>
-
-    </section>
-
-</div>
-
-
-<div
-    class="message"
-    id="message"
-></div>
-
-
-<div class="footer">
-    ET Token • Pi Testnet
-</div>
-
-</div>
-
+</nav>
 
 <script>
 
-/* =====================================
-   ET TOKEN CONFIGURATION
-===================================== */
+/* =========================
+   PIONEER USER
+========================= */
 
-const BACKEND_URL =
-    "https://petverse09-github-io.onrender.com";
+const savedUser =
+  localStorage.getItem("piUser") ||
+  localStorage.getItem("username");
 
-
-let piAccessToken = null;
-let currentUser = null;
-
-
-/* =====================================
-   PI SDK
-===================================== */
-
-try {
-
-    Pi.init({
-        version: "2.0",
-        sandbox: true
-    });
-
-} catch(error) {
-
-    console.error(
-        "Pi SDK initialization error:",
-        error
-    );
-
+if(savedUser){
+  document.getElementById("username").textContent = savedUser;
 }
 
 
-/* =====================================
-   MESSAGE
-===================================== */
+/* =========================
+   DEMO MINING DISPLAY
+   DOES NOT MODIFY BACKEND
+========================= */
 
-function showMessage(text){
+let mining = false;
+let balance = 0;
+let seconds = 0;
+let timer = null;
 
-    document.getElementById(
-        "message"
-    ).textContent = text;
+function startMining(){
 
+  if(mining){
+    document.getElementById("message").textContent =
+      "⛏️ Mining session already active.";
+    return;
+  }
+
+  mining = true;
+
+  document.getElementById("message").textContent =
+    "⚡ TT Core Machine V4 mining session started.";
+
+  timer = setInterval(function(){
+
+    seconds++;
+
+    const h =
+      String(Math.floor(seconds / 3600)).padStart(2,"0");
+
+    const m =
+      String(Math.floor((seconds % 3600) / 60)).padStart(2,"0");
+
+    const s =
+      String(seconds % 60).padStart(2,"0");
+
+    document.getElementById("session").textContent =
+      `${h}:${m}:${s}`;
+
+    balance += 0.25 / 3600;
+
+    document.getElementById("balance").textContent =
+      balance.toFixed(4);
+
+  },1000);
 }
 
 
-/* =====================================
-   API
-===================================== */
+/* =========================
+   NAVIGATION PLACEHOLDER
+========================= */
 
-async function apiRequest(
-    endpoint
-){
+function openPage(page){
 
-    const response = await fetch(
-        BACKEND_URL + endpoint,
-        {
-            method:"POST",
+  document.getElementById("message").textContent =
+    page + " module selected.";
 
-            headers:{
-                "Content-Type":
-                    "application/json"
-            },
-
-            body:JSON.stringify({
-                accessToken:
-                    piAccessToken
-            })
-        }
-    );
-
-    const data =
-        await response.json();
-
-    if(!response.ok){
-
-        throw new Error(
-            data.error ||
-            data.message ||
-            "Request failed."
-        );
-
-    }
-
-    return data;
+  /*
+   * Dito natin ikakabit sa actual:
+   * wallet.html
+   * referral.html
+   * chat.html
+   * profile.html
+   * reward.html
+   * marketplace.html
+   *
+   * kapag ready na ang bawat module.
+   */
 }
-
-
-/* =====================================
-   PI LOGIN
-===================================== */
-
-async function loginWithPi(){
-
-    const button =
-        document.getElementById(
-            "loginBtn"
-        );
-
-    try{
-
-        button.disabled = true;
-        button.textContent =
-            "CONNECTING TO PI...";
-
-        showMessage(
-            "Connecting securely to Pi..."
-        );
-
-
-        if(
-            typeof Pi === "undefined"
-        ){
-
-            throw new Error(
-                "Pi SDK is not available. Open ET Token inside Pi Browser."
-            );
-
-        }
-
-
-        const authResult =
-            await Pi.authenticate(
-                ["username"],
-                function(payment){
-
-                    console.log(
-                        "Incomplete payment:",
-                        payment
-                    );
-
-                }
-            );
-
-
-        piAccessToken =
-            authResult.accessToken;
-
-
-        const response =
-            await fetch(
-                BACKEND_URL +
-                "/api/auth/pi",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-                        accessToken:
-                            piAccessToken
-                    })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if(!response.ok){
-
-            throw new Error(
-                data.error ||
-                "ET authentication failed."
-            );
-
-        }
-
-
-        currentUser = data;
-
-
-        document.getElementById(
-            "loginCard"
-        ).style.display = "none";
-
-
-        document.getElementById(
-            "dashboard"
-        ).style.display = "block";
-
-
-        updateUserUI(data);
-
-
-        showMessage(
-            "Pi account connected successfully."
-        );
-
-
-        await Promise.all([
-            loadProfile(),
-            loadBalance(),
-            loadMiningStatus()
-        ]);
-
-
-    }catch(error){
-
-        console.error(error);
-
-        showMessage(
-            error.message ||
-            "Pi login failed."
-        );
-
-        button.disabled = false;
-
-        button.textContent =
-            "Login with Pi";
-    }
-
-}
-
-
-/* =====================================
-   USER UI
-===================================== */
-
-function updateUserUI(data){
-
-    const username =
-        data.username || "username";
-
-
-    document.getElementById(
-        "username"
-    ).textContent =
-        "@" + username;
-
-
-    document.getElementById(
-        "avatar"
-    ).textContent =
-        username
-            .substring(0,2)
-            .toUpperCase();
-
-
-    document.getElementById(
-        "referralCode"
-    ).textContent =
-        data.referralCode ||
-        username;
-
-}
-
-
-/* =====================================
-   PROFILE
-===================================== */
-
-async function loadProfile(){
-
-    try{
-
-        const data =
-            await apiRequest(
-                "/api/profile"
-            );
-
-
-        document.getElementById(
-            "username"
-        ).textContent =
-            "@" + data.username;
-
-
-        document.getElementById(
-            "reputation"
-        ).textContent =
-            data.reputationScore ?? 0;
-
-
-        document.getElementById(
-            "multiplier"
-        ).textContent =
-            Number(
-                data.reputationMultiplier ??
-                1
-            ).toFixed(2) + "x";
-
-
-        document.getElementById(
-            "referralCode"
-        ).textContent =
-            data.referralCode ||
-            data.username;
-
-    }catch(error){
-
-        console.error(
-            "Profile error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================
-   BALANCE
-===================================== */
-
-async function loadBalance(){
-
-    try{
-
-        const data =
-            await apiRequest(
-                "/api/balance"
-            );
-
-
-        document.getElementById(
-            "balance"
-        ).textContent =
-            Number(
-                data.balance || 0
-            ).toFixed(8);
-
-    }catch(error){
-
-        console.error(
-            "Balance error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================
-   START MINING
-===================================== */
-
-async function startMining(){
-
-    const button =
-        document.getElementById(
-            "startMiningBtn"
-        );
-
-    try{
-
-        button.disabled = true;
-
-        button.textContent =
-            "STARTING...";
-
-
-        showMessage(
-            "Starting your 24-hour ET mining session..."
-        );
-
-
-        const data =
-            await apiRequest(
-                "/api/mining/start"
-            );
-
-
-        showMessage(
-            "ET mining started successfully."
-        );
-
-
-        if(data.rate){
-
-            document.getElementById(
-                "miningRate"
-            ).textContent =
-                Number(data.rate)
-                    .toFixed(8) +
-                " ET/hour";
-
-        }
-
-
-        await loadMiningStatus();
-
-
-    }catch(error){
-
-        showMessage(
-            error.message ||
-            "Unable to start mining."
-        );
-
-        button.disabled = false;
-
-        button.textContent =
-            "START 24-HOUR MINING";
-    }
-
-}
-
-
-/* =====================================
-   MINING STATUS
-===================================== */
-
-async function loadMiningStatus(){
-
-    try{
-
-        const data =
-            await apiRequest(
-                "/api/mining/status"
-            );
-
-
-        const status =
-            document.getElementById(
-                "miningStatus"
-            );
-
-        const dot =
-            document.getElementById(
-                "statusDot"
-            );
-
-        const startButton =
-            document.getElementById(
-                "startMiningBtn"
-            );
-
-        const claimButton =
-            document.getElementById(
-                "claimBtn"
-            );
-
-
-        if(!data.active){
-
-            status.textContent =
-                "Mining inactive";
-
-            dot.classList.remove(
-                "active"
-            );
-
-            startButton.style.display =
-                "block";
-
-            startButton.disabled =
-                false;
-
-            startButton.textContent =
-                "START 24-HOUR MINING";
-
-            claimButton.style.display =
-                "none";
-
-            document.getElementById(
-                "progressBar"
-            ).style.width = "0%";
-
-            document.getElementById(
-                "miningElapsed"
-            ).textContent = "0%";
-
-            document.getElementById(
-                "miningEnds"
-            ).textContent =
-                "Not active";
-
-            return;
-        }
-
-
-        dot.classList.add(
-            "active"
-        );
-
-
-        status.textContent =
-            data.claimAvailable
-                ? "Mining complete"
-                : "Mining active";
-
-
-        startButton.disabled =
-            true;
-
-
-        const endsAt =
-            new Date(
-                data.endsAt
-            );
-
-
-        document.getElementById(
-            "miningEnds"
-        ).textContent =
-            endsAt.toLocaleString();
-
-
-        if(data.rate){
-
-            document.getElementById(
-                "miningRate"
-            ).textContent =
-                Number(data.rate)
-                    .toFixed(8) +
-                " ET/hour";
-
-        }
-
-
-        let progress = 0;
-
-
-        if(
-            data.startedAt &&
-            data.endsAt
-        ){
-
-            const start =
-                new Date(
-                    data.startedAt
-                ).getTime();
-
-            const end =
-                new Date(
-                    data.endsAt
-                ).getTime();
-
-            const now =
-                Date.now();
-
-
-            progress =
-                Math.min(
-                    100,
-                    Math.max(
-                        0,
-                        ((now - start) /
-                        (end - start)) *
-                        100
-                    )
-                );
-
-        }
-
-
-        document.getElementById(
-            "progressBar"
-        ).style.width =
-            progress + "%";
-
-
-        document.getElementById(
-            "miningElapsed"
-        ).textContent =
-            Math.floor(progress) +
-            "%";
-
-
-        if(data.claimAvailable){
-
-            claimButton.style.display =
-                "block";
-
-            claimButton.disabled =
-                false;
-
-            status.textContent =
-                "Mining complete — reward ready.";
-
-        }else{
-
-            claimButton.style.display =
-                "none";
-
-        }
-
-    }catch(error){
-
-        console.error(
-            "Mining status error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================
-   CLAIM
-===================================== */
-
-async function claimMining(){
-
-    const button =
-        document.getElementById(
-            "claimBtn"
-        );
-
-    try{
-
-        button.disabled = true;
-
-        button.textContent =
-            "CLAIMING...";
-
-
-        showMessage(
-            "Processing ET mining reward..."
-        );
-
-
-        const data =
-            await apiRequest(
-                "/api/mining/claim"
-            );
-
-
-        showMessage(
-            "Successfully claimed " +
-            Number(
-                data.amount || 0
-            ).toFixed(8) +
-            " ET."
-        );
-
-
-        await loadBalance();
-        await loadProfile();
-        await loadMiningStatus();
-
-
-    }catch(error){
-
-        showMessage(
-            error.message ||
-            "Claim failed."
-        );
-
-        button.disabled = false;
-
-        button.textContent =
-            "CLAIM ET REWARD";
-    }
-
-}
-
-
-/* =====================================
-   COPY REFERRAL
-===================================== */
-
-async function copyReferral(){
-
-    const code =
-        document.getElementById(
-            "referralCode"
-        ).textContent;
-
-
-    try{
-
-        await navigator.clipboard
-            .writeText(code);
-
-
-        showMessage(
-            "Referral code copied."
-        );
-
-    }catch(error){
-
-        showMessage(
-            "Unable to copy referral code."
-        );
-
-    }
-
-}
-
-
-/* =====================================
-   AUTO REFRESH
-===================================== */
-
-setInterval(
-    async function(){
-
-        if(!piAccessToken)
-            return;
-
-        await loadMiningStatus();
-
-        await loadBalance();
-
-    },
-    30000
-);
 
 </script>
 
